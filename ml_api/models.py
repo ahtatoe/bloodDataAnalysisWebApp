@@ -1,4 +1,9 @@
+import os
+import glob
+
 from django.db import models
+
+from bloodDataAnalysisWebApp.settings import BASE_DIR
 
 
 class Sample(models.Model):
@@ -50,3 +55,12 @@ class SampleBulkUpload(models.Model):
 
     def __str__(self):
         return f"File id: {self.id}"
+
+    def delete(self, using=None, keep_parents=False):  # temp solution
+        folder = os.path.join(BASE_DIR, 'ml_api/bulkupload')
+        files = glob.glob(f"{folder}/.*")
+        try:
+            for f in files:
+                os.remove(f)
+        except Exception as e:
+            print('Failed to delete %s. Reason: %s' % (f, e))

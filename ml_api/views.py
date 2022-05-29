@@ -1,13 +1,13 @@
 import csv
 import logging
 import os
-import pickle
 from typing import Optional
 
 import pandas as pd
 from django.contrib import messages
 from django.shortcuts import render
 from sklearn.preprocessing import StandardScaler
+from tensorflow import keras
 
 from bloodDataAnalysisWebApp.settings import BASE_DIR
 from .forms import SampleBulkUploadForm
@@ -60,13 +60,14 @@ def save_new_samples_from_csv(file_path: str) -> str:
 
 
 def upload_file_view(request):
-    result = "empty"
+    result = None  # temp solution
+    SampleBulkUpload().delete()  # temp solution
     if request.method == 'GET':
         form = SampleBulkUploadForm()
-        return render(request, 'ml_api/upload.html', {'form': form})
+        return render(request, 'ml_api/upload.html', {'form': form, 'result': None})
     else:
         try:
-            form = SampleBulkUploadForm(data=request.POST, files=request.FILES)
+            form = SampleBulkUploadForm(data=request.POST or None, files=request.FILES or None)
             if form.is_valid():
                 csv_file = form.cleaned_data['csv_file']
                 if not csv_file.name.endswith('.csv'):
@@ -78,7 +79,6 @@ def upload_file_view(request):
                     return render(request, '')
 
                 # save and upload file
-                # form.save()
                 new_sample_bulk_upload = SampleBulkUpload(csv_file=request.FILES['csv_file'])
                 new_sample_bulk_upload.save()
                 # get the path of the file saved in the server
@@ -97,15 +97,19 @@ def upload_file_view(request):
 
 
 def get_result_from_predictions(df):
-    model = pickle.load(open("./ml_api/MLmodel.sav", 'rb'))
+    save_path = "./ml_api/MLmodel.h5"
+    model_ = keras.models.load_model(save_path)
     scaler = StandardScaler()
+    scaler.fit(df)
     x = scaler.transform(df)
-    prediction = model.predict(x)
-    if prediction == 0:
+    prediction = model_.predict(x)  # prediction is a vector
+    prediction_list = list(prediction.flatten())  # it has [float1, float2, float3]
+    prediction_list = [int(float_val) for float_val in prediction_list]  # it has [int1, int2, int3]
+    if prediction_list[0] == 0 and prediction_list[1] == 0 and prediction_list[2] == 1:  # 001
         result = "Normal"
-    elif prediction == 1:
+    elif prediction_list[0] == 0 and prediction_list[1] == 1 and prediction_list[2] == 0:  # 010
         result = "Ovary"
-    elif prediction == 2:
+    elif prediction_list[0] == 1 and prediction_list[1] == 0 and prediction_list[2] == 0:  # 100
         result = "Liver"
     else:
         result = "No valid prediction"

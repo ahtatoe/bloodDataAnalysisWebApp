@@ -16,10 +16,14 @@
             </form>
 
   		</div>
-  		<div class="output-container">
-  			<p>Result:</p>
-  			<h2>{{ result }}</h2>
-  		</div>
+        {% if not result %}
+            <h1></h1>
+        {% else %}
+            <div type="hidden" class="output-container">
+                <p>Result:</p>
+                <h2>{{ result }}</h2>
+            </div>
+        {% endif %}
   	</div>
 </body>
 </html>
