@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Analysis by Blood Test</title>
+	<link rel="stylesheet" type="text/css" href="../../../static/style.css">
+</head>
+<body>
+    <div class="main-container">
+		<div class="input-container">
+            <form action="" method='POST' enctype="multipart/form-data">
+                {% csrf_token %}
+                {{ form }}
+                <input type="submit" class="btn btn-success" value="Submit">
+            </form>
+
+  		</div>
+  		<div class="output-container">
+  			<p>Result:</p>
+  			<h2>{{ result }}</h2>
+  		</div>
+  	</div>
+</body>
+</html>
